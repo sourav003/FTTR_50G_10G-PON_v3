@@ -18,7 +18,7 @@ simple Background_Device
     parameters:
         @display("i=device/pc");
         double wap_distance @unit(m) = uniform(0m,5m);
-        double throughput = default(5e9);
+        double throughput = uniform(3e9,5e9);
         double ber = default(1e-6);
         
         double load = default(0.3);																	// this will vary as 0.1:0.1:1
@@ -38,7 +38,7 @@ simple XR_Device
     parameters:
         @display("i=device/xr");
         double wap_distance @unit(m) = uniform(0m,5m);
-        double throughput = default(5e9);
+        double throughput = uniform(5e9,10e9);
         double ber = default(1e-6);
         
         double frameRate = default(60);		            // default framerate of XR = 60 fps (can be 90, 120 fps)
@@ -57,7 +57,7 @@ simple HMD_Device
     parameters:
         @display("i=block/user");
         double wap_distance @unit(m) = uniform(0m,5m);
-        double throughput = default(5e9);
+        double throughput = uniform(3e9,5e9);
         double ber = default(1e-6);
                 
         double meanPacketSize = default(100);			    // very small value - assuming to be 100 Bytes 
@@ -76,7 +76,7 @@ simple Control_Device
     parameters:
         @display("i=device/gloves");
         double wap_distance @unit(m) = uniform(0m,5m);
-        double throughput = default(5e9);
+        double throughput = uniform(3e9,5e9);
         double ber = default(1e-6);
                 
         double meanPacketSize = default(1500);			    // very small value - assuming to be 1500 Bytes 
@@ -95,7 +95,7 @@ simple Haptic_Device
     parameters:
         @display("i=device/robot_arm");
         double wap_distance @unit(m) = uniform(0m,5m);
-        double throughput = default(5e9);
+        double throughput = uniform(3e9,5e9);
         double ber = default(1e-6);
                 
         double meanPacketSize = default(1000);			    // very small value - assuming to be 100 Bytes 
@@ -113,6 +113,8 @@ simple WiFi_AP
 {
     parameters:
         @display("i=device/accesspoint");
+        double wap_distance @unit(m) = uniform(0m,5m);
+        double throughput = uniform(3e9,5e9);
 
     gates:
         input Sfu_in;
