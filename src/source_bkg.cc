@@ -10,6 +10,8 @@
 #include <omnetpp.h>
 #include <numeric>
 #include <algorithm>
+#include <fstream>   // <-- add this
+#include <iostream>  // (optional, for debugging with std::cout)
 
 #include "sim_params.h"
 #include "ethPacket_m.h"
@@ -28,6 +30,8 @@ class Background_Device : public cSimpleModule
     double pkt_interval;
     double wireless_datarate;
     double wap_dist;
+    vector<double> dist_values;
+
     cMessage *generateEvent = nullptr;
     cMessage *sendEvent = nullptr;
 
@@ -56,7 +60,29 @@ Background_Device::~Background_Device()
 void Background_Device::initialize()
 {
     wireless_datarate = par("throughput").doubleValue();
-    wap_dist = par("wap_distance").doubleValue();
+
+    if(dist_values.empty()) {
+        std::ifstream file;
+
+        if(strcmp(this->getName(),"bkgs1") == 0) {
+            file.open("ap_bkg1.csv");
+        }
+        else if(strcmp(this->getName(),"bkgs2") == 0) {
+            file.open("ap_bkg2.csv");
+        }
+        else if(strcmp(this->getName(),"bkgs3") == 0) {
+            file.open("ap_bkg3.csv");
+        }
+        double value;
+        while(file >> value) {
+            dist_values.push_back(value);
+        }
+    }
+    int idx = getIndex();
+    wap_dist = (idx < (int)dist_values.size()) ? dist_values[idx] : par("wap_distance").doubleValue();
+    //file.close();
+    //par("wap_distance").setDoubleValue(wap_dist);
+    EV << getFullName() << " wap_distance = " << wap_dist << endl;
 
     source_queue.setName("source_queue");
 

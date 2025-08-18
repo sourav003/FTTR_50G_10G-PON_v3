@@ -10,6 +10,8 @@
 #include <omnetpp.h>
 #include <numeric>   // Required for std::iota
 #include <algorithm> // Required for std::sort
+#include <fstream>   // <-- add this
+#include <iostream>  // (optional, for debugging with std::cout)
 
 #include "sim_params.h"
 #include "ethPacket_m.h"
@@ -36,6 +38,8 @@ class Haptic_Device : public cSimpleModule
         double pkt_interval;                     // inter-packet generation interval
         double wireless_datarate;
         double wap_dist;
+        vector<double> dist_values;
+
         cMessage *generateEvent = nullptr;
         cMessage *sendEvent = nullptr;
 
@@ -65,7 +69,19 @@ Haptic_Device::~Haptic_Device()
 void Haptic_Device::initialize()
 {
     wireless_datarate = par("throughput").doubleValue();
-    wap_dist = par("wap_distance").doubleValue();
+
+    if(dist_values.empty()) {
+        std::ifstream file("ap_hpt.csv");
+        double value;
+        while(file >> value) {
+            dist_values.push_back(value);
+        }
+    }
+    int idx = getIndex();
+    wap_dist = (idx < (int)dist_values.size()) ? dist_values[idx] : par("wap_distance").doubleValue();
+    //par("wap_distance").setDoubleValue(wap_dist);
+    //file.close();
+    EV << getFullName() << " wap_distance = " << wap_dist << endl;
 
     source_queue.setName("source_queue");
 
