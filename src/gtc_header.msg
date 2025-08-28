@@ -54,9 +54,9 @@ packet gtc_header extends cPacket
     int OnuID;
     int SfuID;
     int MfuID;
-    double BufferOccupancyTC1 = 0;				// 24 bits
-    double BufferOccupancyTC2 = 0;				// 24 bits
-    double BufferOccupancyTC3 = 0;				// 24 bits
+    double BufferOccupancyTC1 = 0.0;				// 24 bits
+    double BufferOccupancyTC2 = 0.0;				// 24 bits
+    double BufferOccupancyTC3 = 0.0;				// 24 bits
     
     long SeqID;
     

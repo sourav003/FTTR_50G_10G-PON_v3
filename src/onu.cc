@@ -215,8 +215,8 @@ void ONU::handleMessage(cMessage *msg)
             gtc_hdr_sz = 3 + 1 + 1 + 5 + 8;                   // total size of GTC UL header: Preamble+Delim+BIP+PLOu_Header
             if(!gtc_dl_queue.isEmpty()) {
                 gtc_header *dl_hdr = (gtc_header *)gtc_dl_queue.pop();
-                onu_grant_TC2 = std::max(0.0,dl_hdr->getOnu_grant_TC2(getIndex()));
-                onu_grant_TC3 = std::max(0.0,dl_hdr->getOnu_grant_TC3(getIndex()) - gtc_hdr_sz);
+                onu_grant_TC2 = std::max(0.0,dl_hdr->getOnu_grant_TC2(getIndex()) - gtc_hdr_sz);
+                onu_grant_TC3 = std::max(0.0,dl_hdr->getOnu_grant_TC3(getIndex()));
                 seqID = dl_hdr->getSeqID();
                 delete dl_hdr;          // deleting the used gtc_dl_header
             }
@@ -250,8 +250,10 @@ void ONU::handleMessage(cMessage *msg)
                     ethPacket *front = (ethPacket *)queue_TC2.front();
                     if(front->getByteLength() <= onu_grant_TC2) {                // check if the first packet can be sent now
                         ethPacket *data = (ethPacket *)queue_TC2.pop();          // pop and send the packet
-                        onu_grant_TC2 = std::max(0.0,onu_grant_TC2-data->getByteLength());
-                        pending_buffer_TC2 = std::max(0.0,pending_buffer_TC2-data->getByteLength());
+                        onu_grant_TC2 = std::max(0.0, onu_grant_TC2 - data->getByteLength());
+                        pending_buffer_TC2 = std::max(0.0,pending_buffer_TC2 - data->getByteLength());
+                        if(pending_buffer_TC2 < 1e-3)   // forcefully removing the numerical error
+                            pending_buffer_TC2 = 0;
 
                         EV << getFullName() << " at " << simTime() << " Sending ul payload: " << data->getByteLength() << ", pending_buffer_TC2 = " << pending_buffer_TC2 << ", onu_grant_TC2 = " << onu_grant_TC2 << endl;
                         send(data,"SpltGate_o");
@@ -290,6 +292,8 @@ void ONU::handleMessage(cMessage *msg)
                             //EV << getFullName() << " at " << simTime() << " sent fragmented packet of size: " << onu_grant_TC2 << " and en-queued packet of size = " << data->getByteLength() << endl;
 
                             pending_buffer_TC2 = std::max(0.0,pending_buffer_TC2 - onu_grant_TC2);
+                            if(pending_buffer_TC2 < 1e-3)   // forcefully removing the numerical error
+                                pending_buffer_TC2 = 0;
                             onu_grant_TC2 = 0;          // grant exhausted!
 
                             //double xr_packet_latency = copy->getOnuDepartureTime().dbl() - copy->getOnuArrivalTime().dbl();
@@ -325,8 +329,10 @@ void ONU::handleMessage(cMessage *msg)
                     ethPacket *front = (ethPacket *)queue_TC3.front();
                     if(front->getByteLength() <= onu_grant_TC3) {                // check if the first packet can be sent now
                         ethPacket *data = (ethPacket *)queue_TC3.pop();          // pop and send the packet
-                        onu_grant_TC3 = std::max(0.0,onu_grant_TC3-data->getByteLength());
-                        pending_buffer_TC3 = std::max(0.0,pending_buffer_TC3-data->getByteLength());
+                        onu_grant_TC3 = std::max(0.0,onu_grant_TC3 - data->getByteLength());
+                        pending_buffer_TC3 = std::max(0.0,pending_buffer_TC3 - data->getByteLength());
+                        if(pending_buffer_TC3 < 1e-3)   // forcefully removing the numerical error
+                            pending_buffer_TC3 = 0;
 
                         EV << getFullName() << " at " << simTime() << " Sending ul payload: " << data->getByteLength() << ", pending_buffer_TC3 = " << pending_buffer_TC3 << ", onu_grant_TC3 = " << onu_grant_TC3 << endl;
                         send(data,"SpltGate_o");
@@ -378,6 +384,8 @@ void ONU::handleMessage(cMessage *msg)
                             //EV << getFullName() << " at " << simTime() << " sent fragmented packet of size: " << onu_grant_TC3 << " and en-queued packet of size = " << data->getByteLength() << endl;
 
                             pending_buffer_TC3 = std::max(0.0,pending_buffer_TC3 - onu_grant_TC3);
+                            if(pending_buffer_TC3 < 1e-3)   // forcefully removing the numerical error
+                                pending_buffer_TC3 = 0;
                             onu_grant_TC3 = 0;          // grant exhausted!
 
                             /*if(strcmp(data->getName(),"bkg_data") == 0) {
@@ -412,5 +420,4 @@ void ONU::handleMessage(cMessage *msg)
         }
     }
 }
-
 

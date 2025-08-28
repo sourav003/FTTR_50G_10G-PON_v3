@@ -22,5 +22,12 @@ extern double onu_buffer_capacity;            // ONU buffer capacity (bytes)
 extern double sfu_buffer_capacity;            // SFU buffer capacity (bytes)
 extern double T_guard;                        // guard time for each ONU
 
+extern double wifi_ofdma_slot;                // time duration of each OFDMA slot
+extern double wifi_sifs_time;                 // SIFS time duration
+extern double total_5GHz_bandwidth;           // total 5 GHz bandwidth
+extern double total_6GHz_bandwidth;           // total 6 GHz bandwidth
+extern int wifi_stas_connected;               // No. of STAs connected to each WAP
+
+
 
 #endif /* SIM_PARAMS_H_ */

@@ -17,4 +17,6 @@ message ping
 {
     int ONU_id;
     int SFU_id;
+    
+    double Inter_node_dist;
 }

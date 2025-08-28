@@ -70,8 +70,8 @@ void Haptic_Device::initialize()
 {
     wireless_datarate = par("throughput").doubleValue();
 
+    std::ifstream file("ap_hpt.csv");
     if(dist_values.empty()) {
-        std::ifstream file("ap_hpt.csv");
         double value;
         while(file >> value) {
             dist_values.push_back(value);
@@ -79,8 +79,8 @@ void Haptic_Device::initialize()
     }
     int idx = getIndex();
     wap_dist = (idx < (int)dist_values.size()) ? dist_values[idx] : par("wap_distance").doubleValue();
-    //par("wap_distance").setDoubleValue(wap_dist);
-    //file.close();
+    file.close();
+    //wap_dist = par("wap_distance").doubleValue();
     EV << getFullName() << " wap_distance = " << wap_dist << endl;
 
     source_queue.setName("source_queue");
@@ -141,6 +141,7 @@ void Haptic_Device::handleMessage(cMessage *msg)
             simtime_t txDuration = pkt->getBitLength() / wireless_datarate;
             // send it
             sendDirect(pkt, propDelay, txDuration, targetModule->gate("Src_in"));
+            //sendDirect(pkt, 0, 0, targetModule->gate("Src_in"));
             scheduleAt(simTime()+txDuration, sendEvent);
             EV << getFullName() << " Sent Haptic packet at = " << simTime();
             EV << " and next packet will be sent at = " << simTime()+txDuration << endl;
@@ -160,5 +161,4 @@ ethPacket *Haptic_Device::generateNewPacket()
     //EV << getFullName() << " New packet generated with size (bytes): " << avgPacketSize << endl;
     return pkt;
 }
-
 

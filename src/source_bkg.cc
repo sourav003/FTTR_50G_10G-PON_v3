@@ -61,9 +61,8 @@ void Background_Device::initialize()
 {
     wireless_datarate = par("throughput").doubleValue();
 
+    std::ifstream file;
     if(dist_values.empty()) {
-        std::ifstream file;
-
         if(strcmp(this->getName(),"bkgs1") == 0) {
             file.open("ap_bkg1.csv");
         }
@@ -80,8 +79,9 @@ void Background_Device::initialize()
     }
     int idx = getIndex();
     wap_dist = (idx < (int)dist_values.size()) ? dist_values[idx] : par("wap_distance").doubleValue();
-    //file.close();
-    //par("wap_distance").setDoubleValue(wap_dist);
+    file.close();
+    //wap_dist = par("wap_distance").doubleValue();
+
     EV << getFullName() << " wap_distance = " << wap_dist << endl;
 
     source_queue.setName("source_queue");
@@ -126,6 +126,7 @@ void Background_Device::handleMessage(cMessage *msg)
             simtime_t txDuration = pkt->getBitLength() / wireless_datarate;
             // send it
             sendDirect(pkt, propDelay, txDuration, targetModule->gate("Src_in"));
+            //sendDirect(pkt, 0, 0, targetModule->gate("Src_in"));
             scheduleAt(simTime()+txDuration, sendEvent);
             EV << getFullName() << " Sent background packet at = " << simTime();
             EV << " and next packet will be sent at = " << simTime()+txDuration << endl;

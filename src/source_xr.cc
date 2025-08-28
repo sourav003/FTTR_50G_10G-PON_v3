@@ -73,8 +73,8 @@ void XR_Device::initialize()
 {
     wireless_datarate = par("throughput").doubleValue();
 
+    std::ifstream file("ap_xr.csv");
     if(dist_values.empty()) {
-        std::ifstream file("ap_xr.csv");
         double value;
         while(file >> value) {
             dist_values.push_back(value);
@@ -82,8 +82,8 @@ void XR_Device::initialize()
     }
     int idx = getIndex();
     wap_dist = (idx < (int)dist_values.size()) ? dist_values[idx] : par("wap_distance").doubleValue();
-    //par("wap_distance").setDoubleValue(wap_dist);
-    //file.close();
+    file.close();
+    //wap_dist = par("wap_distance").doubleValue();
     EV << getFullName() << " wap_distance = " << wap_dist << endl;
 
     source_queue.setName("source_queue");
@@ -142,6 +142,7 @@ void XR_Device::handleMessage(cMessage *msg)
             simtime_t txDuration = pkt->getBitLength() / wireless_datarate;
             // send it
             sendDirect(pkt, propDelay, txDuration, targetModule->gate("Src_in"));
+            //sendDirect(pkt, 0, 0, targetModule->gate("Src_in"));
             scheduleAt(simTime()+txDuration, sendEvent);
             EV << getFullName() << " Sent XR packet at = " << simTime();
             EV << " and next packet will be sent at = " << simTime()+txDuration << endl;
@@ -161,5 +162,4 @@ ethPacket *XR_Device::generateNewPacket()
     //EV << "[srcXR" << getIndex() << "] New packet generated with size (bytes): " << pkt_size << endl;
     return pkt;
 }
-
 

@@ -61,9 +61,9 @@ class gtc_header;
  *     int OnuID;
  *     int SfuID;
  *     int MfuID;
- *     double BufferOccupancyTC1 = 0;				// 24 bits
- *     double BufferOccupancyTC2 = 0;				// 24 bits
- *     double BufferOccupancyTC3 = 0;				// 24 bits
+ *     double BufferOccupancyTC1 = 0.0;				// 24 bits
+ *     double BufferOccupancyTC2 = 0.0;				// 24 bits
+ *     double BufferOccupancyTC3 = 0.0;				// 24 bits
  * 
  *     long SeqID;
  * 
@@ -111,9 +111,9 @@ class gtc_header : public ::omnetpp::cPacket
     int OnuID = 0;
     int SfuID = 0;
     int MfuID = 0;
-    double BufferOccupancyTC1 = 0;
-    double BufferOccupancyTC2 = 0;
-    double BufferOccupancyTC3 = 0;
+    double BufferOccupancyTC1 = 0.0;
+    double BufferOccupancyTC2 = 0.0;
+    double BufferOccupancyTC3 = 0.0;
     long SeqID = 0;
 
   private:

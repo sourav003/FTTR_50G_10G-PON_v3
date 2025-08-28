@@ -27,18 +27,18 @@ class SFU : public cSimpleModule
         cQueue queue_TC3;                       // queue for T-CONT 3 traffic: assured bandwidth without guarantee
         cQueue gtc_dl_queue;                    // queue to store gtc_dl_headers
         double capacity;                        // buffer size = 100 MB
-        double pending_buffer_TC1 = 0;          // pending data size in buffer
-        double pending_buffer_TC2 = 0;
-        double pending_buffer_TC3 = 0;
-        double packet_drop_count = 0;
-        double mfu_sfu_rtt = 0;
-        double start_time_TC1 = 0;
-        double sfu_grant_TC1 = 0;
-        double start_time_TC2 = 0;
-        double sfu_grant_TC2 = 0;
-        double start_time_TC3 = 0;
-        double sfu_grant_TC3 = 0;
-        double gtc_hdr_sz = 0;
+        double pending_buffer_TC1 = 0.0;          // pending data size in buffer
+        double pending_buffer_TC2 = 0.0;
+        double pending_buffer_TC3 = 0.0;
+        double packet_drop_count = 0.0;
+        double mfu_sfu_rtt = 0.0;
+        double start_time_TC1 = 0.0;
+        double sfu_grant_TC1 = 0.0;
+        double start_time_TC2 = 0.0;
+        double sfu_grant_TC2 = 0.0;
+        double start_time_TC3 = 0.0;
+        double sfu_grant_TC3 = 0.0;
+        double gtc_hdr_sz = 0.0;
         long seqID;
 
         //simsignal_t latencySignalXr;
@@ -196,7 +196,7 @@ void SFU::handleMessage(cMessage *msg)
 
             EV << getFullName() << " mfu_sfu_rtt: " << mfu_sfu_rtt << ", start_time_TC2: " << start_time_TC2 << endl;
 
-            simtime_t ul_tx_time = arr_time + (simtime_t)(2*max_polling_cycle + start_time_TC2 - mfu_sfu_rtt);      // if RTT > 125/2 usec, then multiply by 2, else 1
+            simtime_t ul_tx_time = arr_time + (simtime_t)(max_polling_cycle + start_time_TC2 - mfu_sfu_rtt);      // if RTT > 125/2 usec, then multiply by 2, else 1
             // - (pkt->getBitLength()/pon_link_datarate)
             cMessage *send_ul_header = new cMessage("send_ul_header");    // send uplink data
             scheduleAt(ul_tx_time, send_ul_header);
@@ -221,14 +221,14 @@ void SFU::handleMessage(cMessage *msg)
                 gtc_header *dl_hdr = (gtc_header *)gtc_dl_queue.pop();
                 int totalNodes = getParentModule()->par("NumberOfSFUs");
                 int index =  getIndex() % totalNodes;
-                sfu_grant_TC2 = std::max(0.0,dl_hdr->getSfu_grant_TC2(index));
-                sfu_grant_TC3 = std::max(0.0,dl_hdr->getSfu_grant_TC3(index) - gtc_hdr_sz);
+                sfu_grant_TC2 = std::max(0.0,dl_hdr->getSfu_grant_TC2(index) - gtc_hdr_sz);
+                sfu_grant_TC3 = std::max(0.0,dl_hdr->getSfu_grant_TC3(index));
                 seqID = dl_hdr->getSeqID();
                 delete dl_hdr;          // deleting the used gtc_dl_header
             }
             else {
-                sfu_grant_TC2 = 0;
-                sfu_grant_TC3 = 0;
+                sfu_grant_TC2 = 0.0;
+                sfu_grant_TC3 = 0.0;
             }
 
             gtc_header *gtc_hdr_ul = new gtc_header("gtc_hdr_ul");
@@ -251,13 +251,15 @@ void SFU::handleMessage(cMessage *msg)
         }
         else if(strcmp(msg->getName(),"send_ul_payload_TC2") == 0) {
             // for T-CONT 2
-            if((sfu_grant_TC2 > 0)&&(pending_buffer_TC2 > 0)) {
+            if((sfu_grant_TC2 > 0.0)&&(pending_buffer_TC2 > 0.0)&&(!msg->isScheduled())) {
                 if(!queue_TC2.isEmpty()) {
                     ethPacket *front = (ethPacket *)queue_TC2.front();
                     if(front->getByteLength() <= sfu_grant_TC2) {                // check if the first packet can be sent now
                         ethPacket *data = (ethPacket *)queue_TC2.pop();          // pop and send the packet
-                        sfu_grant_TC2 = std::max(0.0,sfu_grant_TC2-data->getByteLength());
-                        pending_buffer_TC2 = std::max(0.0,pending_buffer_TC2-data->getByteLength());
+                        sfu_grant_TC2 = std::max(0.0, sfu_grant_TC2 - data->getByteLength());
+                        pending_buffer_TC2 = std::max(0.0, pending_buffer_TC2 - data->getByteLength());
+                        if(pending_buffer_TC2 < 1e-3)   // forcefully removing the numerical error
+                            pending_buffer_TC2 = 0.0;
 
                         EV << getFullName() << " at " << simTime() << " Sending ul payload: " << data->getByteLength() << ", pending_buffer_TC2 = " << pending_buffer_TC2 << ", sfu_grant_TC2 = " << sfu_grant_TC2 << endl;
                         send(data,"SpltGate_out");
@@ -295,8 +297,10 @@ void SFU::handleMessage(cMessage *msg)
                             }
                             //EV << getFullName() << " at " << simTime() << " sent fragmented packet of size: " << onu_grant_TC2 << " and en-queued packet of size = " << data->getByteLength() << endl;
 
-                            pending_buffer_TC2 = std::max(0.0,pending_buffer_TC2 - sfu_grant_TC2);
-                            sfu_grant_TC2 = 0;          // grant exhausted!
+                            pending_buffer_TC2 = std::max(0.0, pending_buffer_TC2 - sfu_grant_TC2);
+                            if(pending_buffer_TC2 < 1e-3)   // forcefully removing the numerical error
+                                pending_buffer_TC2 = 0.0;
+                            sfu_grant_TC2 = 0.0;          // grant exhausted!
 
                             //double xr_packet_latency = copy->getSfuDepartureTime().dbl() - copy->getSfuArrivalTime().dbl();
                             //EV << getFullName() << " packet_latency: " << packet_latency << endl;
@@ -331,8 +335,10 @@ void SFU::handleMessage(cMessage *msg)
                     ethPacket *front = (ethPacket *)queue_TC3.front();
                     if(front->getByteLength() <= sfu_grant_TC3) {                // check if the first packet can be sent now
                         ethPacket *data = (ethPacket *)queue_TC3.pop();          // pop and send the packet
-                        sfu_grant_TC3 = std::max(0.0,sfu_grant_TC3-data->getByteLength());
-                        pending_buffer_TC3 = std::max(0.0,pending_buffer_TC3-data->getByteLength());
+                        sfu_grant_TC3 = std::max(0.0, sfu_grant_TC3 - data->getByteLength());
+                        pending_buffer_TC3 = std::max(0.0, pending_buffer_TC3 - data->getByteLength());
+                        if(pending_buffer_TC3 < 1e-3)   // forcefully removing the numerical error
+                            pending_buffer_TC3 = 0.0;
 
                         EV << getFullName() << " at " << simTime() << " Sending ul payload: " << data->getByteLength() << ", pending_buffer_TC3 = " << pending_buffer_TC3 << ", sfu_grant_TC3 = " << sfu_grant_TC3 << endl;
                         send(data,"SpltGate_out");
@@ -350,7 +356,7 @@ void SFU::handleMessage(cMessage *msg)
                         }*/
 
                         // rescheduling send_ul_payload to send the consecutive queued packets
-                        if(pending_buffer_TC3 > 0) {
+                        if(pending_buffer_TC3 > 0.0) {
                             simtime_t Txtime = (simtime_t)(data->getBitLength()/int_pon_link_datarate);
                             scheduleAt(data->getSendingTime()+Txtime,msg);
                             //EV << getFullName() << " send_ul_payload re-scheduled!" << endl;
@@ -383,8 +389,10 @@ void SFU::handleMessage(cMessage *msg)
                             }
                             //EV << getFullName() << " at " << simTime() << " sent fragmented packet of size: " << sfu_grant_TC3 << " and en-queued packet of size = " << data->getByteLength() << endl;
 
-                            pending_buffer_TC3 = std::max(0.0,pending_buffer_TC3 - sfu_grant_TC3);
-                            sfu_grant_TC3 = 0;          // grant exhausted!
+                            pending_buffer_TC3 = std::max(0.0, pending_buffer_TC3 - sfu_grant_TC3);
+                            if(pending_buffer_TC3 < 1e-3)   // forcefully removing the numerical error
+                                pending_buffer_TC3 = 0.0;
+                            sfu_grant_TC3 = 0.0;          // grant exhausted!
 
                             /*if(strcmp(data->getName(),"bkg_data") == 0) {
                                 double bkg_packet_latency = data->getSfuDepartureTime().dbl() - data->getSfuArrivalTime().dbl();
@@ -418,7 +426,6 @@ void SFU::handleMessage(cMessage *msg)
         }
     }
 }
-
 
 
 

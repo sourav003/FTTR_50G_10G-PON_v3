@@ -230,4 +230,3 @@ void Splitter::handleMessage(cMessage *msg)
     }
 }
 
-

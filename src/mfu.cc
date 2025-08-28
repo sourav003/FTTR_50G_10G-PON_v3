@@ -103,10 +103,10 @@ void MFU::handleMessage(cMessage *msg)
             int index = sfuId % sfus;
             // for T-CONT 2
             sfu_buffer_TC2[index] = pkt->getBufferOccupancyTC2();
-            EV << getFullName() << " updated sfu_buffer_TC2[" << sfuId << "] = " << sfu_buffer_TC2[sfuId] << endl;
+            EV << getFullName() << " updated sfu_buffer_TC2[" << index << "] = " << sfu_buffer_TC2[index] << " for sfuId = " << sfuId <<endl;
             // for T-CONT 3
             sfu_buffer_TC3[index] = pkt->getBufferOccupancyTC3();
-            EV << getFullName() << " updated sfu_buffer_TC3[" << sfuId << "] = " << sfu_buffer_TC3[sfuId] << endl;
+            EV << getFullName() << " updated sfu_buffer_TC3[" << index << "] = " << sfu_buffer_TC3[index] << " for sfuId = " << sfuId << endl;
 
             delete pkt;         // nothing more to do with the header
         }
@@ -238,10 +238,10 @@ void MFU::handleMessage(cMessage *msg)
                 // shifting the tx_start cursor
                 tx_start += T_guard + (sfu_grant_TC2[i]*8/int_pon_link_datarate) + (sfu_grant_TC3[i]*8/int_pon_link_datarate);
 
-                EV << getFullName() << " sfu_start_time_TC2[" << i << "] = " << simTime().dbl()+2*125e-6+sfu_start_time_TC2[i]-(worst_rtt/2) << " for seqID = " << seqID << endl;
-                EV << getFullName() << " sfu_start_time_TC3[" << i << "] = " << simTime().dbl()+2*125e-6+sfu_start_time_TC3[i]-(worst_rtt/2) << " for seqID = " << seqID << endl;
+                EV << getFullName() << " sfu_start_time_TC2[" << i << "] = " << simTime().dbl()+max_polling_cycle+sfu_start_time_TC2[i]-(worst_rtt/2) << " for seqID = " << seqID << endl;
+                EV << getFullName() << " sfu_start_time_TC3[" << i << "] = " << simTime().dbl()+max_polling_cycle+sfu_start_time_TC3[i]-(worst_rtt/2) << " for seqID = " << seqID << endl;
             }
-            EV << getFullName() << " last SFU tx finish time = " << simTime().dbl()+2*125e-6+sfu_start_time_TC3[sfus-1]-(worst_rtt/2)+(sfu_grant_TC3[sfus-1]*8/int_pon_link_datarate) << " for seqID = " << seqID << endl;
+            EV << getFullName() << " last SFU tx finish time = " << simTime().dbl()+max_polling_cycle+sfu_start_time_TC3[sfus-1]-(worst_rtt/2)+(sfu_grant_TC3[sfus-1]*8/int_pon_link_datarate) << " for seqID = " << seqID << endl;
 
             send(gtc_hdr_dl,"SpltGate_o");          // sending the downlink GTC header to SFUs
 
@@ -254,7 +254,6 @@ void MFU::handleMessage(cMessage *msg)
         }
     }
 }
-
 
 
 
